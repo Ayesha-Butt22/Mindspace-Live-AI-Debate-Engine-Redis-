@@ -1,0 +1,4 @@
+redis
+anthropic
+google-genai
+python-dotenv
