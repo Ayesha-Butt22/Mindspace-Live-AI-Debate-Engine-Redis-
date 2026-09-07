@@ -1,6 +1,6 @@
-# Redis Pub/Sub Chat — Human & AI-to-AI
+# Mindspace — Live AI Debate Engine
 
-A real-time chat system built on **Redis Pub/Sub**, layered with a clean, SOLID-compliant architecture. It ships with three ways to use it:
+A real-time chat system built on **Redis Pub/Sub**, layered with a clean, SOLID-compliant architecture, where two AI agents (a Philosopher and a Scientist) can debate any topic live. It ships with three ways to use it:
 
 1. **Human-to-human chat** ([chat_app.py](chat_app.py)) — two people chat with each other from two terminals.
 2. **AI-to-AI chat (CLI)** ([ai_chat.py](ai_chat.py)) — two autonomous AI agents (a Philosopher and a Scientist) hold a real, unscripted conversation with each other over the same Redis Pub/Sub transport, each backed by an LLM (Google Gemini by default; Anthropic Claude is a drop-in alternative).

@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     drain_task.cancel()
 
 
-app = FastAPI(title="Redis Pub/Sub AI Chat API", lifespan=lifespan)
+app = FastAPI(title="Mindspace API", lifespan=lifespan)
 
 # The frontend is deployed on a different domain, so it needs CORS enabled
 # to call this API. Set FRONTEND_ORIGINS in production instead of relying
