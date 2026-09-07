@@ -111,8 +111,8 @@ chat_service = AIChatService(
 **1. Clone and install dependencies**
 
 ```bash
-git clone https://github.com/Ayesha-Butt22/Redis.git
-cd Redis
+git clone https://github.com/Ayesha-Butt22/Mindspace-Live-AI-Debate-Engine-Redis-.git
+cd Mindspace-Live-AI-Debate-Engine-Redis-
 pip install -r requirements.txt
 ```
 
