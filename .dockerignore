@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+chat.db
+*.log
+.git/
+frontend/

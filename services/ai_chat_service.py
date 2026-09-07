@@ -35,6 +35,12 @@ class AIChatService:
         """Call this only on the one agent that should speak first."""
         self._send(opening_line)
 
+    def reset(self) -> None:
+        """Clear conversation state so this service can be reused for a
+        fresh conversation without tearing down its listener thread."""
+        self._history = []
+        self._turns_sent = 0
+
     def handle_incoming(self, channel: str, text: str) -> None:
         """Called automatically whenever the peer agent's message arrives."""
         print(f"\n[{self._agent.peer_name}]: {text}")

@@ -2,3 +2,5 @@ redis
 anthropic
 google-genai
 python-dotenv
+fastapi
+uvicorn[standard]

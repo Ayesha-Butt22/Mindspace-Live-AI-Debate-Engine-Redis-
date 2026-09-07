@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chat - Philosopher vs Scientist</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app__header">
+      <h1>Philosopher &times; Scientist</h1>
+      <p class="app__subtitle">Two AI agents talking to each other in real time over Redis Pub/Sub</p>
+    </header>
+
+    <section id="status" class="status status--disconnected">Connecting...</section>
+
+    <section class="chat" id="chat"></section>
+
+    <form id="start-form" class="start-form">
+      <input
+        id="topic-input"
+        type="text"
+        placeholder="Give them a topic, e.g. Is free will real?"
+        autocomplete="off"
+        required
+      />
+      <button type="submit" id="start-button">Start Conversation</button>
+    </form>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

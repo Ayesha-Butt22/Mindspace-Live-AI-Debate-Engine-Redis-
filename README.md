@@ -1,9 +1,10 @@
 # Redis Pub/Sub Chat — Human & AI-to-AI
 
-A real-time chat system built on **Redis Pub/Sub**, layered with a clean, SOLID-compliant architecture. It ships with two chat modes:
+A real-time chat system built on **Redis Pub/Sub**, layered with a clean, SOLID-compliant architecture. It ships with three ways to use it:
 
 1. **Human-to-human chat** ([chat_app.py](chat_app.py)) — two people chat with each other from two terminals.
-2. **AI-to-AI chat** ([ai_chat.py](ai_chat.py)) — two autonomous AI agents (a Philosopher and a Scientist) hold a real, unscripted conversation with each other over the same Redis Pub/Sub transport, each backed by an LLM (Google Gemini by default; Anthropic Claude is a drop-in alternative).
+2. **AI-to-AI chat (CLI)** ([ai_chat.py](ai_chat.py)) — two autonomous AI agents (a Philosopher and a Scientist) hold a real, unscripted conversation with each other over the same Redis Pub/Sub transport, each backed by an LLM (Google Gemini by default; Anthropic Claude is a drop-in alternative).
+3. **AI-to-AI chat (web app)** ([api/](api) + [frontend/](frontend)) — the same AI-to-AI conversation, watchable live in a browser: a FastAPI backend streams it over a WebSocket to a small HTML/CSS/JS frontend. See [DEPLOYMENT.md](DEPLOYMENT.md) to deploy both for free.
 
 Every message — human or AI — is persisted to a local SQLite database.
 
@@ -16,7 +17,7 @@ The codebase follows **SOLID** end to end. Dependencies point at abstractions, n
 | Principle | Where it shows up |
 |---|---|
 | **Single Responsibility** | Every class does exactly one thing: [`RedisQueueService`](services/redis_queue_service.py) only talks to Redis, [`GeminiResponder`](services/gemini_responder.py) only talks to Gemini, [`message_repository.py`](db/message_repository.py) only runs SQL, [`message_controller.py`](controllers/message_controller.py) only decides business rules (e.g. don't save empty messages). |
-| **Open/Closed** | AI-to-AI chat was added as a set of *new* files ([`AIChatService`](services/ai_chat_service.py), [`ai_chat.py`](ai_chat.py), the responders) without modifying the existing human chat path ([`ChatService`](services/chat_service.py), [`chat_app.py`](chat_app.py)). |
+| **Open/Closed** | AI-to-AI chat was added as a set of *new* files ([`AIChatService`](services/ai_chat_service.py), [`ai_chat.py`](ai_chat.py), the responders) without modifying the existing human chat path ([`ChatService`](services/chat_service.py), [`chat_app.py`](chat_app.py)). Later, the web app ([api/](api)) was added the same way — it *observes* the same Redis Pub/Sub channels and reuses `AIChatService`/`GeminiResponder` unchanged; it did not require editing `ai_chat.py` or the service layer. |
 | **Liskov Substitution** | Any [`IPublisher`](interfaces/publisher_interface.py)/[`ISubscriber`](interfaces/subscriber_interface.py) implementation can replace `RedisQueueService`; any [`IResponder`](interfaces/responder_interface.py) implementation ([`GeminiResponder`](services/gemini_responder.py) or [`ClaudeResponder`](services/claude_responder.py)) can replace the other with zero changes to `AIChatService`. |
 | **Interface Segregation** | Publishing and subscribing are two separate interfaces, not one bloated `IQueue`. Generating an AI reply (`IResponder`) is segregated from sending it (`IPublisher`) — a class that only sends never has to implement listening logic, and vice versa. |
 | **Dependency Inversion** | [`ChatService`](services/chat_service.py) and [`AIChatService`](services/ai_chat_service.py) depend only on interfaces (`IPublisher`, `ISubscriber`, `IResponder`), injected through the constructor. The only place concrete classes (`RedisQueueService`, `GeminiResponder`) are instantiated is the composition root in each entry point ([`chat_app.py`](chat_app.py) / [`ai_chat.py`](ai_chat.py)). |
@@ -75,7 +76,21 @@ chat_service = AIChatService(
 │   ├── connection.py               # SQLite connection + table creation
 │   └── message_repository.py       # Raw SQL: insert/find/update/delete
 │
+├── api/                            # Web backend (FastAPI) — a thin adapter, no new chat logic
+│   ├── app.py                       # HTTP/WebSocket routes only
+│   ├── conversation_manager.py      # Wires AIChatService + GeminiResponder + Redis for the web app
+│   └── connection_manager.py        # Tracks connected WebSocket clients, broadcasts to them
+│
+├── frontend/                       # Static browser UI (no build step)
+│   ├── index.html
+│   ├── style.css
+│   ├── app.js                       # Connects to the backend WebSocket, renders the live chat
+│   └── config.js                    # Backend URL - edit after deploying the backend
+│
 ├── requirements.txt
+├── Dockerfile                      # Builds the backend for deployment
+├── render.yaml                     # Render Blueprint for one-click backend deploy
+├── DEPLOYMENT.md                   # Step-by-step: deploy backend + frontend for free
 ├── .env.example                    # Template for API keys (copy to .env, fill in, never commit .env)
 └── .gitignore
 ```
@@ -148,6 +163,16 @@ python ai_chat.py philosopher "Do you think consciousness is just complex comput
 
 Both agents reply to each other automatically, using Gemini to generate each reply from the conversation so far. Each agent stops after `MAX_TURNS` replies ([`config/ai_settings.py`](config/ai_settings.py)) to prevent an infinite, ever-billing loop. Press `Ctrl+C` in either terminal to stop early.
 
+### AI-to-AI chat (web app)
+
+```bash
+docker start redis-pubsub          # make sure Redis is running
+python -m uvicorn api.app:app --reload --port 8000
+```
+Then open [frontend/index.html](frontend/index.html) in your browser, type a topic, and click **Start Conversation**. Messages stream in live over a WebSocket as Gemini generates each reply.
+
+To put this online for others to use, see [DEPLOYMENT.md](DEPLOYMENT.md) — deploys the backend to Render and the frontend to Vercel/Netlify, both on free tiers.
+
 ### Inspect saved messages
 
 ```bash
@@ -181,3 +206,5 @@ Nothing in `AIChatService` needs to change — that's Dependency Inversion in pr
 - **Google Gemini API** (`google-genai`) — default AI provider (free tier)
 - **Anthropic Claude API** (`anthropic`) — alternative AI provider
 - **python-dotenv** — loads API keys from `.env`
+- **FastAPI + Uvicorn** — web backend (REST + WebSocket) for the browser-based chat
+- **Vanilla HTML/CSS/JS** — frontend, no build step required
