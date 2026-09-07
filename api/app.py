@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from api.connection_manager import ConnectionManager
 from api.conversation_manager import ConversationManager
+from controllers import message_controller
 
 # Comma-separated list of allowed frontend origins, e.g.
 # "https://your-app.vercel.app,https://your-app.netlify.app". Defaults to
@@ -63,6 +64,17 @@ def health_check():
 def start_conversation(request: StartConversationRequest):
     conversation_manager.start_conversation(request.topic)
     return {"status": "started", "topic": request.topic}
+
+
+@app.get("/api/history")
+def get_history():
+    # Reuses the same controller/repository every chat mode (CLI and web)
+    # already writes to - no new persistence logic here.
+    rows = message_controller.list_messages()
+    return [
+        {"id": row[0], "sender": row[1], "content": row[2], "timestamp": row[3]}
+        for row in rows
+    ]
 
 
 @app.websocket("/ws")

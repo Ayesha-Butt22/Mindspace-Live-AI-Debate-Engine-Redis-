@@ -3,31 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Chat - Philosopher vs Scientist</title>
+  <title>Mindspace — Philosopher × Scientist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="app">
-    <header class="app__header">
-      <h1>Philosopher &times; Scientist</h1>
-      <p class="app__subtitle">Two AI agents talking to each other in real time over Redis Pub/Sub</p>
-    </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sidebar__logo">✦</div>
 
-    <section id="status" class="status status--disconnected">Connecting...</section>
+      <nav class="sidebar__nav">
+        <button class="sidebar__icon" id="new-debate-icon" title="New debate">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 4v6h6M20 20v-6h-6M4.5 15a8 8 0 0013.9 3M19.5 9A8 8 0 005.6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button class="sidebar__icon" id="history-icon" title="Conversation history">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 8v5l3 2M21 12a9 9 0 11-3-6.7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </nav>
 
-    <section class="chat" id="chat"></section>
+      <a
+        class="sidebar__icon sidebar__icon--bottom"
+        href="https://github.com/Ayesha-Butt22/Redis"
+        target="_blank"
+        rel="noopener"
+        title="View source on GitHub"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2a10 10 0 00-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.15-1.11-1.46-1.11-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.99 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 015 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.69 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.75c0 .26.18.58.69.48A10 10 0 0012 2z" />
+        </svg>
+      </a>
+    </aside>
 
-    <form id="start-form" class="start-form">
-      <input
-        id="topic-input"
-        type="text"
-        placeholder="Give them a topic, e.g. Is free will real?"
-        autocomplete="off"
-        required
-      />
-      <button type="submit" id="start-button">Start Conversation</button>
-    </form>
-  </main>
+    <div class="panel">
+      <header class="panel__header">
+        <div id="status" class="pill pill--pending">
+          <span class="pill__dot"></span>
+          <span class="pill__label">Connecting</span>
+        </div>
+        <div class="brand">Mindspace</div>
+        <button class="header-btn" id="new-debate-btn">New Debate</button>
+      </header>
+
+      <section id="empty-state" class="hero">
+        <div class="hero__orbit">
+          <div class="hero__bubble hero__bubble--left">🧠 What is consciousness?</div>
+          <div class="hero__avatar">
+            <span class="hero__eye"></span>
+            <span class="hero__eye"></span>
+          </div>
+          <div class="hero__bubble hero__bubble--right">🔬 Let's look at the evidence.</div>
+        </div>
+
+        <h1 class="hero__title">Two minds, <em>one</em> live debate</h1>
+        <p class="hero__subtitle">
+          Give a Philosopher and a Scientist AI agent a topic and watch them
+          think it through — live, unscripted, over Redis Pub/Sub.
+        </p>
+      </section>
+
+      <section id="chat" class="chat" hidden></section>
+
+      <div class="composer-card">
+        <div class="composer-card__tip">
+          <span>💡 Stuck for a topic?</span>
+          <button type="button" id="surprise-btn">Surprise me</button>
+        </div>
+        <form id="start-form" class="composer-card__form">
+          <input
+            id="topic-input"
+            type="text"
+            placeholder="Give them a topic to debate..."
+            autocomplete="off"
+            required
+          />
+          <button type="submit" id="start-button" class="composer__send" aria-label="Start conversation">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M3 11.5L21 3l-8.5 18-2.5-7.5L3 11.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <div class="shelf">
+        <button class="chip" data-topic="Is free will real, or just an illusion?">Free will</button>
+        <button class="chip" data-topic="Could human consciousness ever be fully explained by physics?">Consciousness</button>
+        <button class="chip" data-topic="Should we be afraid of superintelligent AI?">AI risk</button>
+        <button class="chip" data-topic="Is time travel theoretically possible?">Time travel</button>
+        <button class="chip" data-topic="Are we living in a simulation?">Simulation theory</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="history-overlay" class="overlay" hidden>
+    <div class="overlay__panel">
+      <div class="overlay__header">
+        <h2>Conversation history</h2>
+        <button id="history-close" class="overlay__close" aria-label="Close">✕</button>
+      </div>
+      <div id="history-list" class="overlay__list"></div>
+    </div>
+  </div>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
