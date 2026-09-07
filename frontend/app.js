@@ -76,6 +76,39 @@ function appendMessage(sender, text) {
   chatEl.scrollTop = chatEl.scrollHeight;
 }
 
+async function wakeBackend() {
+  // Render's free tier spins the backend down after inactivity. The very
+  // first request to a sleeping instance can fail outright (not just be
+  // slow), so ping a lightweight endpoint as soon as the page loads to
+  // start waking it up before the user clicks anything.
+  try {
+    await fetch(`${BACKEND_URL}/api/health`);
+  } catch (error) {
+    // Ignore - the retry logic in the submit handler covers the real case.
+  }
+}
+
+async function startConversationWithRetry(topic, attempts = 5, delayMs = 4000) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic }),
+      });
+      if (response.ok) return true;
+    } catch (error) {
+      // Backend still waking up - fall through and retry.
+    }
+
+    if (attempt < attempts) {
+      setStatus(`Waking up the backend (${attempt}/${attempts})...`, "pending");
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return false;
+}
+
 function connectWebSocket() {
   const wsUrl = BACKEND_URL.replace(/^http/, "ws") + "/ws";
   const socket = new WebSocket(wsUrl);
@@ -163,18 +196,21 @@ formEl.addEventListener("submit", async (event) => {
   showChat();
   startButtonEl.disabled = true;
 
-  try {
-    await fetch(`${BACKEND_URL}/api/start`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic }),
-    });
-  } catch (error) {
-    appendMessage("Scientist", `Could not reach the backend: ${error}`);
-  } finally {
-    startButtonEl.disabled = false;
+  const started = await startConversationWithRetry(topic);
+
+  if (started) {
+    setStatus("Connected", "connected");
+  } else {
+    setStatus("Connected", "connected");
+    appendMessage(
+      "Scientist",
+      "The backend is taking longer than usual to wake up (this happens on the free tier after inactivity). Please try again in a moment."
+    );
   }
+
+  startButtonEl.disabled = false;
 });
 
 setStatus("Connecting", "pending");
 connectWebSocket();
+wakeBackend();
